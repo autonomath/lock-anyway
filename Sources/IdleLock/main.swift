@@ -1,0 +1,3 @@
+import IdleLockCore
+
+IdleLockApplication.main()

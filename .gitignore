@@ -1,0 +1,10 @@
+.DS_Store
+.build/
+dist/
+DerivedData/
+*.xcuserstate
+*.xcuserdata/
+*.swp
+*.log
+WebGPT-*.md
+output/

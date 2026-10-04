@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lock Anyway — Automatic Mac Lock After Real Inactivity</title>
+  <meta name="description" content="A free macOS menu bar app that locks your Mac after real keyboard and mouse inactivity, even when another app keeps it awake.">
+  <meta name="theme-color" content="#07162f">
+  <link rel="canonical" href="https://autonomath.github.io/lock-anyway/">
+  <link rel="icon" type="image/png" href="assets/app-icon.png">
+  <link rel="apple-touch-icon" href="assets/app-icon.png">
+  <link rel="stylesheet" href="site.css">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Lock Anyway — Apps can keep your Mac awake. Not unlocked.">
+  <meta property="og:description" content="A free, local-only Mac utility that locks after real keyboard and mouse inactivity.">
+  <meta property="og:url" content="https://autonomath.github.io/lock-anyway/">
+  <meta property="og:image" content="https://autonomath.github.io/lock-anyway/screenshots/countdown.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Lock Anyway",
+    "applicationCategory": "SecurityApplication",
+    "operatingSystem": "macOS 13 or later on Apple silicon",
+    "description": "Locks your Mac after real keyboard and mouse inactivity, even when another app keeps it awake.",
+    "downloadUrl": "https://github.com/autonomath/lock-anyway/releases/latest/download/LockAnyway.dmg",
+    "softwareVersion": "1.1.0",
+    "isAccessibleForFree": true,
+    "license": "https://opensource.org/license/mit"
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Lock Anyway home">
+      <img src="assets/app-icon.png" width="36" height="36" alt="">
+      <span>Lock Anyway</span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#how">How it works</a>
+      <a href="#install">Install</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/autonomath/lock-anyway">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow"><span></span> A second line of defense for your Mac</p>
+          <h1>Apps can keep your Mac awake.<br><em>Not unlocked.</em></h1>
+          <p class="hero-lede">Lock Anyway watches real keyboard and mouse inactivity. When you walk away, it warns you—then locks your Mac even if video, remote access, or another app is keeping the display awake.</p>
+
+          <div class="hero-actions">
+            <a class="button button-primary" href="https://github.com/autonomath/lock-anyway/releases/latest/download/LockAnyway.dmg">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 20h14"/></svg>
+              Download for Mac
+            </a>
+            <a class="button button-ghost" href="https://github.com/autonomath/lock-anyway">View source</a>
+          </div>
+
+          <ul class="trust-list" aria-label="Requirements and trust">
+            <li>Free</li>
+            <li>macOS 13+</li>
+            <li>Apple silicon</li>
+            <li>Apple notarized</li>
+          </ul>
+        </div>
+
+        <div class="hero-visual">
+          <div class="signal-label">REAL INPUT IDLE</div>
+          <div class="screen-frame">
+            <div class="screen-chrome" aria-hidden="true">
+              <span></span><span></span><span></span>
+              <b>Lock Anyway</b>
+            </div>
+            <img src="screenshots/countdown.png" alt="Lock Anyway displaying a countdown before locking the Mac">
+          </div>
+          <div class="status-chip"><i></i> Protection active</div>
+        </div>
+      </div>
+      <a class="scroll-cue" href="#why"><span>See why</span><i></i></a>
+    </section>
+
+    <section class="problem section" id="why">
+      <p class="section-kicker">The gap Lock Anyway closes</p>
+      <div class="problem-grid">
+        <h2>Keep awake<br><span>≠</span> stay unlocked.</h2>
+        <div class="problem-copy">
+          <p class="lead">A video, meeting, remote session, download, or misbehaving app can keep your Mac awake longer than you expect.</p>
+          <p>Lock Anyway ignores the display state and asks one simple question: <strong>has anyone touched the local keyboard or mouse?</strong> If not, your Mac locks on your schedule.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="how section" id="how">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">How it works</p>
+          <h2>Set it once.<br>Walk away safely.</h2>
+        </div>
+        <p>Lock Anyway runs quietly in the menu bar. It does not keep your Mac awake, inspect other apps, or record what you type.</p>
+      </div>
+
+      <ol class="steps">
+        <li>
+          <span class="step-number">01</span>
+          <div class="step-icon pointer-icon" aria-hidden="true"></div>
+          <h3>Watch real inactivity</h3>
+          <p>It measures only the time since real keyboard or mouse input.</p>
+        </li>
+        <li>
+          <span class="step-number">02</span>
+          <div class="step-icon countdown-icon" aria-hidden="true">30</div>
+          <h3>Give you a warning</h3>
+          <p>A clear countdown lets you cancel, add time, or pause locking.</p>
+        </li>
+        <li>
+          <span class="step-number">03</span>
+          <div class="step-icon lock-icon" aria-hidden="true"></div>
+          <h3>Lock the native way</h3>
+          <p>When the countdown ends, macOS opens its normal Lock Screen.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="control section" id="controls">
+      <div class="control-visual">
+        <img src="screenshots/preferences.png" alt="Lock Anyway preferences for delay, countdown, pausing, and Start at Login">
+      </div>
+      <div class="control-copy">
+        <p class="section-kicker">Your timing, your call</p>
+        <h2>Strict when it matters. Easy when it doesn’t.</h2>
+        <ul class="feature-list">
+          <li>
+            <span>01</span>
+            <div><strong>Choose the idle limit</strong><p>Pick a preset or enter the exact delay you want.</p></div>
+          </li>
+          <li>
+            <span>02</span>
+            <div><strong>Snooze from the countdown</strong><p>Add 15 minutes, 30 minutes, one hour, or two.</p></div>
+          </li>
+          <li>
+            <span>03</span>
+            <div><strong>Pause without digging</strong><p>Pause briefly or until you decide to resume.</p></div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="install section" id="install">
+      <div class="install-card">
+        <div class="install-copy">
+          <p class="section-kicker light">Install in under a minute</p>
+          <h2>Download. Drag. Done.</h2>
+          <ol>
+            <li><span>1</span><p>Download and open <strong>LockAnyway.dmg</strong>.</p></li>
+            <li><span>2</span><p>Drag <strong>Lock Anyway</strong> into Applications.</p></li>
+            <li><span>3</span><p>Open it and follow the one-time permission prompt, if shown.</p></li>
+          </ol>
+          <a class="button button-primary" href="https://github.com/autonomath/lock-anyway/releases/latest/download/LockAnyway.dmg">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 20h14"/></svg>
+            Download Lock Anyway
+          </a>
+          <p class="install-note">Signed with Developer ID and notarized by Apple. No Terminal required.</p>
+        </div>
+        <div class="install-visual">
+          <img src="screenshots/dmg.png" alt="Drag Lock Anyway to the Applications folder">
+        </div>
+      </div>
+    </section>
+
+    <section class="privacy section">
+      <div class="privacy-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><path d="M24 4 8 10v12c0 10.6 6.7 18.4 16 22 9.3-3.6 16-11.4 16-22V10L24 4Z"/><path d="m17 24 5 5 10-11"/></svg>
+      </div>
+      <div>
+        <p class="section-kicker">Private by construction</p>
+        <h2>Nothing leaves your Mac.</h2>
+      </div>
+      <p>There is no account, analytics, advertising, cloud service, or network connection. Lock Anyway reads an idle-time counter from macOS—not your keystrokes—and stores only your preferences and local diagnostic logs.</p>
+      <a href="privacy/">Read the privacy policy <span>→</span></a>
+    </section>
+
+    <section class="faq section" id="faq">
+      <div class="section-heading compact">
+        <div>
+          <p class="section-kicker">Questions, answered</p>
+          <h2>The useful details.</h2>
+        </div>
+      </div>
+
+      <div class="faq-list">
+        <details>
+          <summary>Why not just use the built-in Lock Screen settings?<span>+</span></summary>
+          <p>If macOS already locks exactly when you expect, you do not need Lock Anyway. It is a separate backstop for cases where media, remote access, or another process keeps the display awake and delays the normal flow.</p>
+        </details>
+        <details>
+          <summary>Does it read what I type?<span>+</span></summary>
+          <p>No. It reads the macOS idle-time counter—the number of seconds since keyboard or mouse activity. It does not capture keys, clicks, app names, documents, or screen contents.</p>
+        </details>
+        <details>
+          <summary>Why might macOS ask for Accessibility permission?<span>+</span></summary>
+          <p>On Macs where the legacy lock command is unavailable, Lock Anyway presses the native Control–Command–Q Lock Screen shortcut. Accessibility permission allows that single action; the app does not inspect other applications.</p>
+        </details>
+        <details>
+          <summary>Will downloads or remote sessions keep running?<span>+</span></summary>
+          <p>Lock Anyway locks the local user session without quitting applications. Whether the Mac stays awake afterward still depends on macOS and whatever process is keeping it awake.</p>
+        </details>
+        <details>
+          <summary>Is it open source?<span>+</span></summary>
+          <p>Yes. Lock Anyway is free software under the MIT License. You can inspect the source, build it yourself, or report an issue on GitHub.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="final-cta section">
+      <img src="assets/app-icon.png" width="112" height="112" alt="Lock Anyway app icon">
+      <p class="section-kicker">One small utility. One important promise.</p>
+      <h2>When you walk away,<br>your Mac locks anyway.</h2>
+      <div class="hero-actions centered">
+        <a class="button button-primary" href="https://github.com/autonomath/lock-anyway/releases/latest/download/LockAnyway.dmg">Download for Mac</a>
+        <a class="button button-ghost dark" href="https://github.com/autonomath/lock-anyway">View source</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand footer-brand" href="#top">
+      <img src="assets/app-icon.png" width="30" height="30" alt="">
+      <span>Lock Anyway</span>
+    </a>
+    <p>Free and open source. Made for macOS.</p>
+    <nav aria-label="Footer navigation">
+      <a href="privacy/">Privacy</a>
+      <a href="support/">Support</a>
+      <a href="https://github.com/autonomath/lock-anyway/releases">Releases</a>
+      <a href="https://github.com/autonomath/lock-anyway">Source</a>
+    </nav>
+  </footer>
+</body>
+</html>
