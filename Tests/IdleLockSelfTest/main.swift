@@ -31,6 +31,13 @@ do {
     tests.expect(settings.countdownSeconds == 30, "default countdown is 30 seconds")
     tests.expect(settings.startAtLogin, "start at login defaults on")
     tests.expect(!settings.soundEnabled, "sound defaults off")
+    tests.expect(settings.batteryAlertsEnabled, "battery alerts default on")
+}
+
+do {
+    let defaults = makeDefaults()
+    AppSettings(defaults: defaults).setBatteryAlertsEnabled(false)
+    tests.expect(!AppSettings(defaults: defaults).batteryAlertsEnabled, "battery alerts off persists")
 }
 
 do {
@@ -127,6 +134,7 @@ do {
 
     let shortcutResolver = LockStrategyResolver(
         cgSessionCandidates: ["/missing"],
+        localSessionAPICandidates: [],
         isExecutableFile: { _ in false },
         isAccessibilityTrusted: { true }
     )
@@ -134,12 +142,49 @@ do {
 
     let unavailable = LockStrategyResolver(
         cgSessionCandidates: ["/missing"],
+        localSessionAPICandidates: [],
         isExecutableFile: { _ in false },
         isAccessibilityTrusted: { false }
     ).resolve()
     tests.expect(unavailable.strategy == nil, "unavailable without CGSession or Accessibility")
     tests.expect(unavailable.requiresAccessibilityPermission, "unavailable state requests Accessibility")
     tests.expect(unavailable.reason != nil, "unavailable state explains why")
+}
+
+do {
+    let localSessionResolver = LockStrategyResolver(
+        cgSessionCandidates: ["/missing"],
+        localSessionAPICandidates: ["/missing", "/local-session"],
+        isExecutableFile: { _ in false },
+        hasLocalSessionAPI: { $0 == "/local-session" },
+        isAccessibilityTrusted: { false }
+    )
+    tests.expect(
+        localSessionResolver.resolve() == .available(.localSessionAPI(path: "/local-session")),
+        "local session API is preferred over a keyboard shortcut"
+    )
+
+    let deadline = Date().addingTimeInterval(3)
+    tests.expect(
+        LockAttemptGuard.decision(sessionState: .unlocked, now: Date(), deadline: deadline) == .waiting,
+        "lock verification waits before its deadline"
+    )
+    tests.expect(
+        LockAttemptGuard.decision(sessionState: .locked, now: Date(), deadline: deadline) == .confirmed,
+        "lock verification confirms the host session"
+    )
+    tests.expect(
+        LockAttemptGuard.decision(sessionState: .unavailable, now: deadline, deadline: deadline) == .failed,
+        "unconfirmed lock fails once at its deadline"
+    )
+    tests.expect(
+        !LockAttemptGuard.detectedUserActivity(currentIdle: 599.5, referenceIdle: 600),
+        "small HID timing drift does not rearm a failed lock"
+    )
+    tests.expect(
+        LockAttemptGuard.detectedUserActivity(currentIdle: 1, referenceIdle: 600),
+        "real HID activity rearms a failed lock"
+    )
 }
 
 do {
@@ -177,6 +222,85 @@ do {
     } catch {
         tests.expect(false, "HID idle reader failed: \(error.localizedDescription)")
     }
+}
+
+do {
+    func battery(_ percent: Int, onBattery: Bool = true) -> BatterySnapshot {
+        BatterySnapshot(hasBattery: true, isOnBattery: onBattery, percent: percent, minutesToEmpty: nil)
+    }
+
+    var fired: Set<Int> = []
+    func step(_ snapshot: BatterySnapshot, enabled: Bool = true) -> BatteryAlertDecision {
+        let decision = BatteryAlertPolicy.evaluate(snapshot: snapshot, enabled: enabled, firedThresholds: fired)
+        fired = decision.firedThresholds
+        return decision
+    }
+
+    tests.expect(step(battery(11)).alertToShow == nil, "battery alert stays quiet at 11%")
+    tests.expect(step(battery(10)).alertToShow == .low, "battery alert shows corner card at 10%")
+    tests.expect(step(battery(9)).alertToShow == nil, "battery alert does not repeat at 9%")
+    tests.expect(step(battery(5)).alertToShow == .veryLow, "battery alert shows full screen at 5%")
+    tests.expect(step(battery(4)).alertToShow == nil, "battery alert does not repeat at 4%")
+    tests.expect(step(battery(2)).alertToShow == .critical, "battery alert shows critical at 2%")
+    tests.expect(step(battery(1)).alertToShow == nil, "battery alert does not repeat at 1%")
+    tests.expect(BatteryAlertLevel.low.coversScreen == false && BatteryAlertLevel.veryLow.coversScreen, "only 5% and 2% cover the screen")
+    tests.expect(!BatteryAlertLevel.low.playsSound && BatteryAlertLevel.critical.playsSound, "only 5% and 2% play a sound")
+
+    fired = []
+    tests.expect(step(battery(12)).alertToShow == nil, "battery alert stays quiet at 12%")
+    tests.expect(step(battery(4)).alertToShow == .veryLow, "a drop from 12% to 4% shows only the 5% alert")
+    tests.expect(fired == [10, 5], "a drop from 12% to 4% marks 10% and 5% as fired")
+    tests.expect(step(battery(2)).alertToShow == .critical, "2% still fires after a skipped level")
+
+    fired = []
+    _ = step(battery(10))
+    let charging = step(battery(9, onBattery: false))
+    tests.expect(charging.shouldHide && charging.alertToShow == nil, "external power hides the battery alert")
+    tests.expect(fired.contains(10), "10% stays fired while charging below 11%")
+    _ = step(battery(10, onBattery: false))
+    tests.expect(fired.contains(10), "10% stays fired while charging at 10%")
+    tests.expect(step(battery(9)).alertToShow == nil, "unplugging at 9% skips the 10% alert")
+    _ = step(battery(11, onBattery: false))
+    tests.expect(!fired.contains(10), "charging above 10% re-arms the 10% alert")
+    tests.expect(step(battery(11)).alertToShow == nil, "unplugging at 11% stays quiet")
+    tests.expect(step(battery(10)).alertToShow == .low, "the re-armed 10% alert fires again")
+
+    fired = [10]
+    _ = step(battery(11))
+    tests.expect(fired.contains(10), "a reading bouncing up on battery does not re-arm 10%")
+
+    fired = []
+    tests.expect(step(battery(7)).alertToShow == .low, "starting at 7% shows the 10% alert")
+    tests.expect(step(battery(7)).alertToShow == nil, "starting at 7% shows the 10% alert once")
+
+    fired = []
+    let disabled = step(battery(5), enabled: false)
+    tests.expect(disabled.alertToShow == nil && disabled.shouldHide, "disabled battery alerts never fire")
+    let noBattery = step(.noBattery)
+    tests.expect(noBattery.alertToShow == nil && noBattery.shouldHide, "a Mac without a battery never fires")
+
+    tests.expect(BatteryMath.percent(current: 57, maximum: 100) == 57, "battery percent of 57/100 is 57")
+    tests.expect(BatteryMath.percent(current: 2_815, maximum: 5_630) == 50, "battery percent of 2815/5630 is 50")
+    tests.expect(BatteryMath.timeRemainingText(minutes: 24) == "About 24 minutes left", "battery time under an hour")
+    tests.expect(BatteryMath.timeRemainingText(minutes: 65) == "About 1 hr 5 min left", "battery time over an hour")
+    tests.expect(BatteryMath.timeRemainingText(minutes: nil) == nil, "unknown battery time shows no text")
+    tests.expect(BatteryMath.minutesToEmpty(raw: -1, isOnBattery: true) == nil, "calculating battery time is unknown")
+    tests.expect(BatteryMath.minutesToEmpty(raw: 30, isOnBattery: false) == nil, "battery time is hidden on external power")
+    tests.expect(
+        BatteryAlertLevel.low.detail(minutesToEmpty: 24) == "About 24 minutes left. Connect a charger soon.",
+        "battery alert detail includes time left"
+    )
+    tests.expect(
+        BatteryAlertLevel.critical.detail(minutesToEmpty: nil) == "Your Mac will go to sleep very soon.",
+        "critical battery alert warns about sleep"
+    )
+
+    tests.expect(BatteryAlertMonitor.lockStateSuppressesAlerts(.locked), "battery alerts wait while locked")
+    tests.expect(BatteryAlertMonitor.lockStateSuppressesAlerts(.countdown(10)), "battery alerts wait during the lock countdown")
+    tests.expect(!BatteryAlertMonitor.lockStateSuppressesAlerts(.active), "battery alerts show while active")
+
+    let realBattery = IOKitPowerSourceReader().currentSnapshot()
+    tests.expect(!realBattery.hasBattery || (0...100).contains(realBattery.percent), "real battery percent is between 0 and 100")
 }
 
 if tests.failures > 0 {

@@ -28,7 +28,7 @@ public final class CountdownOverlayController {
     private var localMouseMonitor: Any?
     private var globalMouseMonitor: Any?
     private let model = OverlayModel(
-        title: "Locking soon",
+        title: "Locking this Mac soon",
         detail: "Move mouse or press any key to stay unlocked.",
         remainingSeconds: 30,
         showsRemaining: true
@@ -42,7 +42,7 @@ public final class CountdownOverlayController {
     public init() {}
 
     public func showCountdown(remainingSeconds: Int) {
-        model.title = "Locking in \(remainingSeconds) seconds"
+        model.title = "Locking this Mac in \(remainingSeconds) seconds"
         model.detail = "Move mouse or press any key to stay unlocked, or choose extra time."
         model.remainingSeconds = remainingSeconds
         model.showsRemaining = true
@@ -57,7 +57,7 @@ public final class CountdownOverlayController {
         }
 
         withAnimation(.easeInOut(duration: 0.28)) {
-            model.title = "Locking in \(remainingSeconds) seconds"
+            model.title = "Locking this Mac in \(remainingSeconds) seconds"
             model.remainingSeconds = remainingSeconds
         }
     }

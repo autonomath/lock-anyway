@@ -24,6 +24,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     private let lockService: LockService
     private let launchAgent: LaunchAgentService
     private let monitor: IdleMonitor
+    private let batteryMonitor: BatteryAlertMonitor
     private var menuController: MenuController?
     private var preferencesWindow: PreferencesWindowController?
     private var logWindow: LogWindowController?
@@ -39,6 +40,12 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             idleReader: HIDIdleReader(),
             lockService: lockService,
             overlay: overlay,
+            logger: logger
+        )
+        self.batteryMonitor = BatteryAlertMonitor(
+            settings: settings,
+            reader: IOKitPowerSourceReader(),
+            overlay: BatteryAlertOverlayController(),
             logger: logger
         )
         super.init()
@@ -57,6 +64,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         preferencesWindow = PreferencesWindowController(
             settings: settings,
             monitor: monitor,
+            batteryMonitor: batteryMonitor,
             launchAgent: launchAgent,
             logger: logger,
             showLog: { [weak self] in self?.logWindow?.show() }
@@ -73,6 +81,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
 
         monitor.onStateChanged = { [weak self] state in
             self?.menuController?.update(state: state)
+            self?.batteryMonitor.updateLockState(state)
         }
 
         if settings.startAtLogin {
@@ -80,12 +89,14 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         monitor.start()
+        batteryMonitor.start()
         showFirstRunAccessibilityPromptIfNeeded()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         logger.log("Lock Anyway terminating")
         monitor.stop()
+        batteryMonitor.stop()
     }
 
     private func installAutomationObservers() {
@@ -104,6 +115,13 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil,
             suspensionBehavior: .deliverImmediately
         )
+        center.addObserver(
+            self,
+            selector: #selector(previewBatteryAlertForAutomation(_:)),
+            name: Notification.Name("com.user.IdleLock.previewBatteryAlert"),
+            object: nil,
+            suspensionBehavior: .deliverImmediately
+        )
     }
 
     @objc private func showPreferencesForAutomation() {
@@ -112,6 +130,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func testCountdownForAutomation() {
         monitor.testCountdown()
+    }
+
+    @objc private func previewBatteryAlertForAutomation(_ notification: Notification) {
+        let threshold = (notification.object as? String).flatMap { Int($0) } ?? BatteryAlertLevel.veryLow.threshold
+        batteryMonitor.preview(BatteryAlertLevel(rawValue: threshold) ?? .veryLow)
     }
 
     private func showFirstRunAccessibilityPromptIfNeeded() {

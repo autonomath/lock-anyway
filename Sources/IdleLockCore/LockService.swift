@@ -3,6 +3,11 @@ import AppKit
 import Darwin
 import Foundation
 
+private final class LocalShortcutFocusWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
 public protocol LockControlling {
     func availability(promptForAccessibility: Bool) -> LockAvailability
     func lockNow() throws
@@ -10,22 +15,32 @@ public protocol LockControlling {
 
 public struct LockStrategyResolver {
     public var cgSessionCandidates: [String]
+    public var localSessionAPICandidates: [String]
     public var isExecutableFile: (String) -> Bool
+    public var hasLocalSessionAPI: (String) -> Bool
     public var isAccessibilityTrusted: () -> Bool
 
     public init(
         cgSessionCandidates: [String] = LockService.defaultCGSessionCandidates,
+        localSessionAPICandidates: [String] = LockService.defaultLocalSessionAPICandidates,
         isExecutableFile: @escaping (String) -> Bool = { FileManager.default.isExecutableFile(atPath: $0) },
+        hasLocalSessionAPI: @escaping (String) -> Bool = { LocalSessionLockAPI.isAvailable(at: $0) },
         isAccessibilityTrusted: @escaping () -> Bool = { AXIsProcessTrusted() }
     ) {
         self.cgSessionCandidates = cgSessionCandidates
+        self.localSessionAPICandidates = localSessionAPICandidates
         self.isExecutableFile = isExecutableFile
+        self.hasLocalSessionAPI = hasLocalSessionAPI
         self.isAccessibilityTrusted = isAccessibilityTrusted
     }
 
     public func resolve() -> LockAvailability {
         if let path = cgSessionCandidates.first(where: isExecutableFile) {
             return .available(.cgSession(path: path))
+        }
+
+        if let path = localSessionAPICandidates.first(where: hasLocalSessionAPI) {
+            return .available(.localSessionAPI(path: path))
         }
 
         if isAccessibilityTrusted() {
@@ -45,6 +60,11 @@ public final class LockService: LockControlling {
         "/System/Library/CoreServices/CGSession",
         "/usr/bin/CGSession",
         "/bin/CGSession"
+    ]
+    public static let defaultLocalSessionAPICandidates = [
+        "/System/Library/PrivateFrameworks/login.framework/Versions/Current/login",
+        "/System/Library/PrivateFrameworks/login.framework/login",
+        "/System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow"
     ]
 
     private let logger: IdleLockLogger
@@ -77,6 +97,9 @@ public final class LockService: LockControlling {
         switch strategy {
         case .cgSession(let path):
             try runCGSession(path: path)
+        case .localSessionAPI(let path):
+            try LocalSessionLockAPI.lock(using: path)
+            logger.log("Lock request sent to the local macOS session API")
         case .keyboardShortcut:
             try postLockShortcut()
         }
@@ -121,6 +144,19 @@ public final class LockService: LockControlling {
             throw IdleLockError.lockUnavailable("Accessibility permission is required to send Control-Command-Q.")
         }
 
+        let focusWindow = makeLocalShortcutFocusWindow()
+        defer { focusWindow.orderOut(nil) }
+
+        NSApp.activate(ignoringOtherApps: true)
+        focusWindow.makeKeyAndOrderFront(nil)
+        RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+
+        guard NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier else {
+            throw IdleLockError.lockCommandFailed(
+                "Lock Anyway could not take local focus, so it did not send a lock shortcut to the active app."
+            )
+        }
+
         guard let source = CGEventSource(stateID: .hidSystemState) else {
             throw IdleLockError.lockCommandFailed("Unable to create Control-Command-Q event source.")
         }
@@ -140,6 +176,21 @@ public final class LockService: LockControlling {
         logger.log("Lock command sent with Control-Command-Q")
     }
 
+    private func makeLocalShortcutFocusWindow() -> NSWindow {
+        let window = LocalShortcutFocusWindow(
+            contentRect: NSRect(x: -10, y: -10, width: 1, height: 1),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.alphaValue = 0.01
+        window.level = .screenSaver
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        return window
+    }
+
     private func postKey(source: CGEventSource, keyCode: CGKeyCode, keyDown: Bool, flags: CGEventFlags) throws {
         guard let event = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: keyDown) else {
             throw IdleLockError.lockCommandFailed("Unable to create Control-Command-Q key event.")
@@ -148,5 +199,32 @@ public final class LockService: LockControlling {
         event.flags = flags
         event.post(tap: .cghidEventTap)
         usleep(20_000)
+    }
+}
+
+public enum LocalSessionLockAPI {
+    private static let symbolName = "SACLockScreenImmediate"
+    private typealias LockFunction = @convention(c) () -> Void
+
+    public static func isAvailable(at path: String) -> Bool {
+        guard let handle = dlopen(path, RTLD_LAZY | RTLD_LOCAL) else {
+            return false
+        }
+        defer { dlclose(handle) }
+        return dlsym(handle, symbolName) != nil
+    }
+
+    static func lock(using path: String) throws {
+        guard let handle = dlopen(path, RTLD_NOW | RTLD_LOCAL) else {
+            throw IdleLockError.lockCommandFailed("Unable to load the local macOS session service.")
+        }
+        defer { dlclose(handle) }
+
+        guard let symbol = dlsym(handle, symbolName) else {
+            throw IdleLockError.lockCommandFailed("The local macOS session lock function is unavailable.")
+        }
+
+        let lock = unsafeBitCast(symbol, to: LockFunction.self)
+        lock()
     }
 }

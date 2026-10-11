@@ -4,6 +4,7 @@ import SwiftUI
 public final class PreferencesWindowController {
     private let settings: AppSettings
     private let monitor: IdleMonitor
+    private let batteryMonitor: BatteryAlertMonitor
     private let launchAgent: LaunchAgentService
     private let logger: IdleLockLogger
     private let showLog: () -> Void
@@ -12,12 +13,14 @@ public final class PreferencesWindowController {
     public init(
         settings: AppSettings,
         monitor: IdleMonitor,
+        batteryMonitor: BatteryAlertMonitor,
         launchAgent: LaunchAgentService,
         logger: IdleLockLogger,
         showLog: @escaping () -> Void
     ) {
         self.settings = settings
         self.monitor = monitor
+        self.batteryMonitor = batteryMonitor
         self.launchAgent = launchAgent
         self.logger = logger
         self.showLog = showLog
@@ -28,6 +31,7 @@ public final class PreferencesWindowController {
             let view = PreferencesView(
                 settings: settings,
                 monitor: monitor,
+                batteryMonitor: batteryMonitor,
                 launchAgent: launchAgent,
                 logger: logger,
                 showLog: showLog
@@ -36,7 +40,7 @@ public final class PreferencesWindowController {
             let created = NSWindow(contentViewController: hosting)
             created.title = "Lock Anyway Preferences"
             created.styleMask = [.titled, .closable, .miniaturizable]
-            created.setContentSize(NSSize(width: 560, height: 500))
+            created.setContentSize(NSSize(width: 560, height: 600))
             created.center()
             window = created
         }
@@ -49,6 +53,7 @@ public final class PreferencesWindowController {
 private struct PreferencesView: View {
     @ObservedObject var settings: AppSettings
     let monitor: IdleMonitor
+    let batteryMonitor: BatteryAlertMonitor
     let launchAgent: LaunchAgentService
     let logger: IdleLockLogger
     let showLog: () -> Void
@@ -120,6 +125,29 @@ private struct PreferencesView: View {
                     .padding(8)
                 }
 
+                GroupBox("Battery") {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Toggle("Low battery alerts at 10%, 5%, and 2%", isOn: batteryAlertsBinding)
+                            .disabled(!hasBattery)
+
+                        if !hasBattery {
+                            Text("This Mac has no battery.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        HStack(spacing: 8) {
+                            ForEach(BatteryAlertLevel.allCases) { level in
+                                Button("Preview \(level.threshold)%") {
+                                    batteryMonitor.preview(level)
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(8)
+                }
+
                 GroupBox("System") {
                     VStack(alignment: .leading, spacing: 10) {
                         Toggle("Start at Login", isOn: startAtLoginBinding)
@@ -188,6 +216,17 @@ private struct PreferencesView: View {
         Binding(
             get: { settings.soundEnabled },
             set: { settings.setSoundEnabled($0) }
+        )
+    }
+
+    private var hasBattery: Bool {
+        batteryMonitor.hasBattery
+    }
+
+    private var batteryAlertsBinding: Binding<Bool> {
+        Binding(
+            get: { hasBattery && settings.batteryAlertsEnabled },
+            set: { batteryMonitor.setAlertsEnabled($0) }
         )
     }
 

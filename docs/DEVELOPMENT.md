@@ -9,6 +9,8 @@
 
 The project is a Swift Package and does not require `xcodebuild`.
 
+The direct-download build dynamically uses macOS's local login-session lock function when `CGSession` is absent. This keeps the lock action on the host instead of routing a keyboard shortcut through a focused remote-control window. It is a private system API, so a future Mac App Store build would need a separate public-API implementation and App Review validation.
+
 ## Build
 
 ```sh
@@ -66,13 +68,13 @@ scripts/package-app.sh
 Output:
 
 ```text
-dist/LockAnyway-1.1.0.pkg
+dist/LockAnyway-1.2.0.pkg
 ```
 
 Check package signing:
 
 ```sh
-pkgutil --check-signature dist/LockAnyway-1.1.0.pkg
+pkgutil --check-signature dist/LockAnyway-1.2.0.pkg
 ```
 
 ## DMG
@@ -126,6 +128,8 @@ The release DMG script follows the same flow as TilePilot:
 9. Verify `Disable Locking` pauses until resumed.
 10. Verify countdown reaches lock.
 11. Verify RustDesk remains connected while the local Mac locks.
+12. With RustDesk focused, verify a lock attempt targets the host session and the log contains only one request for that idle cycle.
+13. Use `Preview 10%`, `Preview 5%`, and `Preview 2%` in Preferences to check each low-battery alert, and verify each one closes from its Dismiss control.
 
 ## Do Not Create Duplicate App Copies
 

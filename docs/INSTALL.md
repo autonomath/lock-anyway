@@ -33,7 +33,7 @@ scripts/package-app.sh
 Open this package in Finder:
 
 ```text
-dist/LockAnyway-1.1.0.pkg
+dist/LockAnyway-1.2.0.pkg
 ```
 
 The current package installs:
@@ -46,7 +46,7 @@ The package installs and starts the app automatically.
 
 ## First Launch
 
-On modern macOS, `CGSession` may be unavailable. In that case the app falls back to sending the native `Control-Command-Q` lock shortcut, which requires Accessibility permission.
+On modern macOS, `CGSession` may be unavailable. In that case the direct-download build asks the local macOS login session to lock. It sends the native `Control-Command-Q` shortcut only as a last resort, which requires Accessibility permission.
 
 Grant permission when macOS asks. If the app is disabled because permission is missing, click the status row in the menu to open the permission prompt.
 

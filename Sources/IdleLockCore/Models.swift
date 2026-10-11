@@ -14,6 +14,8 @@ public enum IdleLockRunState: Equatable {
     case active
     case paused(String)
     case countdown(Int)
+    case locking
+    case locked
     case disabled(String)
 
     public var displayName: String {
@@ -24,6 +26,10 @@ public enum IdleLockRunState: Equatable {
             return "Paused"
         case .countdown(let seconds):
             return "Countdown \(seconds)s"
+        case .locking:
+            return "Locking"
+        case .locked:
+            return "Locked"
         case .disabled:
             return "Disabled"
         }
@@ -32,12 +38,15 @@ public enum IdleLockRunState: Equatable {
 
 public enum LockStrategy: Equatable, CustomStringConvertible {
     case cgSession(path: String)
+    case localSessionAPI(path: String)
     case keyboardShortcut
 
     public var description: String {
         switch self {
         case .cgSession(let path):
             return "CGSession at \(path)"
+        case .localSessionAPI:
+            return "local macOS session lock API"
         case .keyboardShortcut:
             return "Control-Command-Q keyboard shortcut"
         }

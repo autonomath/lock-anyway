@@ -124,6 +124,42 @@ run_notarization() {
   spctl -a -vv --type open --context context:primary-signature "$dmg_path"
 }
 
+notarize_app_bundle() {
+  local app_path="$1"
+
+  if [[ -z "$notary_profile" ]]; then
+    echo "Notarization requested, but no notary profile was provided." >&2
+    echo "Set IDLE_LOCK_NOTARY_PROFILE or pass --notary-profile <profile>." >&2
+    exit 1
+  fi
+
+  local zip_dir
+  zip_dir="$(mktemp -d "${TMPDIR:-/tmp}/lock-anyway-notarize.XXXXXX")"
+  local zip_path="$zip_dir/$app_name.zip"
+
+  ditto -c -k --keepParent "$app_path" "$zip_path"
+
+  local -a notary_args=(
+    submit "$zip_path"
+    --keychain-profile "$notary_profile"
+    --wait
+  )
+
+  if [[ -n "$notary_keychain" ]]; then
+    notary_args+=(--keychain "$notary_keychain")
+  fi
+
+  echo "Submitting app for notarization with profile: $notary_profile" >&2
+  xcrun notarytool "${notary_args[@]}"
+
+  echo "Stapling notarization ticket to the app..." >&2
+  xcrun stapler staple "$app_path"
+  xcrun stapler validate "$app_path"
+
+  echo "Gatekeeper assessment of the app:" >&2
+  spctl -a -vv "$app_path"
+}
+
 echo "Building signed release app..." >&2
 app_src="$("$repo_dir/scripts/build-app.sh")"
 
@@ -133,6 +169,10 @@ if [[ ! -d "$app_src" ]]; then
 fi
 
 codesign --verify --deep --strict "$app_src"
+
+if [[ $notarize_dmg -eq 1 ]]; then
+  notarize_app_bundle "$app_src"
+fi
 
 mkdir -p "$dist_dir"
 rm -f "$final_dmg" "$temp_dmg"

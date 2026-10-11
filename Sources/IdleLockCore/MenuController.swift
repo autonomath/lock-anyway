@@ -51,6 +51,10 @@ public final class MenuController: NSObject {
             name = "pause.circle"
         case .countdown:
             name = "timer"
+        case .locking:
+            name = "lock.rotation"
+        case .locked:
+            name = "lock.fill"
         case .disabled:
             name = "lock.trianglebadge.exclamationmark"
         }
@@ -68,6 +72,10 @@ public final class MenuController: NSObject {
             name = "pause.circle"
         case .countdown:
             name = "timer"
+        case .locking:
+            name = "lock"
+        case .locked:
+            name = "lock.fill"
         case .disabled:
             name = "exclamationmark.triangle"
         }
@@ -108,7 +116,11 @@ public final class MenuController: NSObject {
         case .paused(let reason):
             return reason
         case .countdown(let seconds):
-            return "Locking in \(seconds)s"
+            return "Locking this Mac in \(seconds)s"
+        case .locking:
+            return "Locking this Mac..."
+        case .locked:
+            return "This Mac is locked"
         case .disabled(let reason):
             return reason.localizedCaseInsensitiveContains("accessibility")
                 ? "Needs Accessibility Permission..."
@@ -124,6 +136,10 @@ public final class MenuController: NSObject {
             return reason
         case .countdown(let seconds):
             return "Lock Anyway will lock this Mac in \(seconds) seconds."
+        case .locking:
+            return "Lock Anyway asked macOS to lock this Mac and is waiting for confirmation."
+        case .locked:
+            return "This Mac's local login session is locked."
         case .disabled(let reason):
             return reason
         }
@@ -137,6 +153,10 @@ public final class MenuController: NSObject {
             return NSImage(systemSymbolName: "pause.circle", accessibilityDescription: "Paused")
         case .countdown:
             return NSImage(systemSymbolName: "timer", accessibilityDescription: "Countdown")
+        case .locking:
+            return NSImage(systemSymbolName: "lock.rotation", accessibilityDescription: "Locking")
+        case .locked:
+            return NSImage(systemSymbolName: "lock.fill", accessibilityDescription: "Locked")
         case .disabled:
             return NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: "Disabled")
         }

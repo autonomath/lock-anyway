@@ -27,19 +27,23 @@
     <article>
       <section>
         <h2>Data collection</h2>
-        <p>None. The app has no analytics, advertising, account system, cloud service, tracking SDK, or network feature.</p>
+        <p>None. No analytics, advertising, accounts, cloud service, or network feature.</p>
       </section>
       <section>
         <h2>Keyboard and mouse</h2>
-        <p>Lock Anyway reads the macOS idle-time counter: the number of seconds since local keyboard or mouse activity. It does not capture which keys you press, where you click, or what appears on your screen.</p>
+        <p>Lock Anyway reads the macOS idle-time counter: the seconds since local keyboard or mouse activity. It never captures keys, clicks, or screen contents.</p>
+      </section>
+      <section>
+        <h2>Battery</h2>
+        <p>Low-battery alerts read the battery level and charger state from macOS. That reading stays on your Mac.</p>
       </section>
       <section>
         <h2>Local storage</h2>
-        <p>Your chosen delay, countdown, pause state, and Start at Login preference are stored locally on your Mac. Local diagnostic logs contain app state and errors, not document contents or input events.</p>
+        <p>Your preferences are stored on your Mac. The local log records app state and errors, never documents or input events.</p>
       </section>
       <section>
         <h2>Accessibility</h2>
-        <p>On Macs where the legacy lock command is unavailable, Lock Anyway may request Accessibility permission so it can press the native Control–Command–Q Lock Screen shortcut. The permission is not used to inspect other apps.</p>
+        <p>Lock Anyway locks your session directly. It asks for Accessibility only on systems where it must press Control–Command–Q instead, and never uses it to inspect other apps.</p>
       </section>
       <section>
         <h2>Source code</h2>
@@ -47,7 +51,7 @@
       </section>
       <section>
         <h2>Last updated</h2>
-        <p>August 13, 2026.</p>
+        <p>October 11, 2026.</p>
       </section>
     </article>
   </main>

@@ -56,9 +56,12 @@ tail -n 80 ~/Library/Logs/LockAnyway.log
 Expected lock strategy order:
 
 1. Use `CGSession -suspend` if a working binary exists.
-2. Otherwise use `Control-Command-Q` through Core Graphics events after Accessibility permission is trusted.
+2. Otherwise call the local macOS session lock service directly.
+3. Use `Control-Command-Q` through Core Graphics events only as a last resort after Accessibility permission is trusted.
 
 The app intentionally does not use `pmset displaysleepnow` as an automatic fallback.
+
+After requesting a lock, the app waits for macOS to confirm that this Mac's local session is locked. If confirmation fails, automatic retries stop until local keyboard or mouse activity is detected. This prevents a focused remote-desktop window from receiving the lock shortcut repeatedly.
 
 ## Start At Login Is Not Working
 
@@ -88,7 +91,7 @@ If `/Applications/Lock Anyway.app` is root-owned or unwritable, build a package 
 
 ```sh
 scripts/package-app.sh
-open dist/LockAnyway-1.1.0.pkg
+open dist/LockAnyway-1.2.0.pkg
 ```
 
 Do not add an AppleScript `with administrator privileges` fallback to the reload script without an explicit reason.

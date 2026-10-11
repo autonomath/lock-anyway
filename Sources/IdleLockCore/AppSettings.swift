@@ -10,6 +10,7 @@ public final class AppSettings: ObservableObject {
         static let startAtLogin = "startAtLogin"
         static let soundEnabled = "soundEnabled"
         static let customDelaySeconds = "customDelaySeconds"
+        static let batteryAlertsEnabled = "batteryAlertsEnabled"
     }
 
     private let defaults: UserDefaults
@@ -21,6 +22,7 @@ public final class AppSettings: ObservableObject {
     @Published public private(set) var startAtLogin: Bool
     @Published public private(set) var soundEnabled: Bool
     @Published public private(set) var customDelaySeconds: TimeInterval
+    @Published public private(set) var batteryAlertsEnabled: Bool
 
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -57,6 +59,12 @@ public final class AppSettings: ObservableObject {
 
         let storedCustom = defaults.object(forKey: Key.customDelaySeconds) as? TimeInterval
         self.customDelaySeconds = SettingsValidator.sanitizeDelay(storedCustom ?? delay)
+
+        if defaults.object(forKey: Key.batteryAlertsEnabled) == nil {
+            self.batteryAlertsEnabled = true
+        } else {
+            self.batteryAlertsEnabled = defaults.bool(forKey: Key.batteryAlertsEnabled)
+        }
         persistAll()
     }
 
@@ -110,6 +118,11 @@ public final class AppSettings: ObservableObject {
         persistAll()
     }
 
+    public func setBatteryAlertsEnabled(_ enabled: Bool) {
+        batteryAlertsEnabled = enabled
+        persistAll()
+    }
+
     public func pause(for seconds: TimeInterval) {
         pausedIndefinitely = false
         pausedUntil = Date().addingTimeInterval(max(1, seconds))
@@ -142,6 +155,7 @@ public final class AppSettings: ObservableObject {
         defaults.set(startAtLogin, forKey: Key.startAtLogin)
         defaults.set(soundEnabled, forKey: Key.soundEnabled)
         defaults.set(customDelaySeconds, forKey: Key.customDelaySeconds)
+        defaults.set(batteryAlertsEnabled, forKey: Key.batteryAlertsEnabled)
         if let pausedUntil {
             defaults.set(pausedUntil.timeIntervalSince1970, forKey: Key.pausedUntil)
         } else {

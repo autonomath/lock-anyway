@@ -49,6 +49,8 @@ Lock Anyway should be understandable to a normal Mac user:
 - Let media, downloads, and remote desktop keep running while the local session locks.
 - Stop one awake-keeping process from leaving the Mac unlocked all day.
 
+Extra feature: low-battery alerts at 10%, 5%, and 2%. The 10% alert is a corner card; 5% and 2% dim the screen like the countdown and play the macOS alert sound. Each alert closes when the Mac is plugged in, and Preferences has one switch to turn them off.
+
 ## Non-Goals
 
 - It is not a keep-awake app.
@@ -76,4 +78,4 @@ Popup action:
 
 Accessibility copy:
 
-> Lock Anyway needs Accessibility permission only to send the macOS Lock Screen shortcut if the legacy lock command is unavailable.
+> Lock Anyway needs Accessibility permission only if both direct host-lock methods are unavailable and it must use the macOS Lock Screen shortcut as a last resort.

@@ -27,7 +27,7 @@ Lock Anyway is free, Apple-notarized, and currently supports Apple-silicon Macs 
 1. [Download LockAnyway.dmg](https://github.com/autonomath/lock-anyway/releases/latest/download/LockAnyway.dmg).
 2. Open the DMG and drag **Lock Anyway.app** to Applications.
 3. Eject the DMG and open Lock Anyway from Applications.
-4. If macOS asks, grant Accessibility permission so the app can press the native Lock Screen shortcut.
+4. On older or unsupported systems, macOS may ask for Accessibility permission for the last-resort Lock Screen shortcut.
 
 No Terminal, account, or installer package is required.
 
@@ -43,6 +43,7 @@ Quit the old **Idle Lock** menu-bar app and remove `Idle Lock.app` from Applicat
 - Lets you add 15 minutes, 30 minutes, one hour, or two hours.
 - Lets you pause briefly or until manually resumed.
 - Opens the native macOS Lock Screen when the timer expires.
+- Warns you before the battery runs out with alerts at 10%, 5%, and 2% that close when you plug in.
 - Starts at login when enabled.
 
 ## Why It Exists
@@ -56,6 +57,8 @@ It is not a keep-awake app, break timer, proximity lock, or MDM policy tool.
 ## Privacy
 
 Lock Anyway has no account, analytics, advertising, cloud service, or network feature. It stores only your preferences and local diagnostic logs. Read the [privacy policy](https://autonomath.github.io/lock-anyway/privacy/) or inspect the source.
+
+Lock requests target the Mac's local login session. The app confirms the host lock before completing an idle cycle and suppresses automatic retries if macOS does not confirm it, so a focused remote-desktop window cannot receive a repeated lock shortcut.
 
 ## Development
 
